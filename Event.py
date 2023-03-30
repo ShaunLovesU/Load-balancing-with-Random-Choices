@@ -1,17 +1,17 @@
-
-'''
-Define the Event class, which is used to store the event information.
-
-'''
-
 class Event:
     def __init__(self, type, time):
         self.type = type
         self.time = time
+        self.server_num = None
 
         self.left = None
         self.right = None
 
+    def set_server_num(self, server_num):
+        self.server_num = server_num
+
+    def get_server_num(self):
+        return self.server_num
 
     def get_type(self):
         return self.type
@@ -25,4 +25,3 @@ class Event:
             return 0
         else:
             return 1
-        

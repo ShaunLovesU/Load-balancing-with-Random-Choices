@@ -1,8 +1,4 @@
-'''
-Define the EventList class, which is used to store the event list by using splay tree.
-Give reference to "https://github.com/anoopj/pysplay/blob/master/splay.py"
-'''
-from Event import *
+from Event import Event
 
 class EventList: 
     # splay tree implementation from "https://github.com/anoopj/pysplay/blob/master/splay.py"
@@ -75,3 +71,13 @@ class EventList:
         t.left = self.header.right
         t.right = self.header.left
         self.root = t
+    def remove(self):
+        # Now delete the root.
+        self.size -=1
+        if self.root.left== None:
+            self.root = self.root.right
+        else:
+            x = self.root.right
+            self.root = self.root.left
+            self.splay(self.root)
+            self.root.right = x
