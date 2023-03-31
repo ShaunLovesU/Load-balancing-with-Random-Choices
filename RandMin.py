@@ -36,12 +36,13 @@ def customer(env, name, servers):
     print('%7.4f %s: Arrived' % (arrive, name))
 
     # get the random num of servers
-    k = random.randint(1, NUM_SERVERS-1)
+    num_selected_server = random.randint(1, NUM_SERVERS-1)
     # get selected server's queue length
-    each_length = {i: NoInSystem(servers[i]) for i in load_balancer(k, servers)}
+    each_length = {i: NoInSystem(servers[i]) for i in load_balancer(num_selected_server, servers)}
 
     # need to change
     Queues.append({i: len(servers[i].put_queue) for i in range(len(servers))})
+    
 
     choice = [k for k, v in sorted(each_length.items(), key=lambda a: a[1])][0]
 
@@ -51,12 +52,13 @@ def customer(env, name, servers):
         wait = env.now - arrive
         print('%7.4f %s: Waited %6.3f, start service' % (env.now, name, wait))
 
-        tib = random.expovariate(1.0 / Mean_service)
-        yield env.timeout(tib)
+        service_time = random.expovariate(1.0 / Mean_service)
+        yield env.timeout(service_time)
         print('%7.4f %s: departure' % (env.now, name))
 
-        for i in range(len(servers)):
-            Queues.append({i: len(servers[i].put_queue)})
+        # for i in range(len(servers)):
+        #     Queues.append({i: len(servers[i].put_queue)})
+        Queues.append({i: len(servers[i].put_queue) for i in range(len(servers))})
 
 
 
@@ -65,11 +67,11 @@ def source(env, number, interval, servers):
     """Source generates customers randomly"""
     global Queues
     for i in range(number):
-        c = customer(env, 'Customer%02d' % i, servers)
+        c = customer(env, 'Customer#%02d' % i, servers)
 
         env.process(c)
-        t = random.expovariate(1.0 / interval)
-        yield env.timeout(t)
+        each_arrival = random.expovariate(1.0 / interval)
+        yield env.timeout(each_arrival)
 
 
 def main():
@@ -90,8 +92,9 @@ def main():
     # print(Queues)
 
     df = pd.DataFrame(Queues).plot()
-    plt.title('Queue length')
+    plt.title('Queue length over time')
     plt.xlabel('Time')
+    plt.ylabel('Queue length')
     plt.show()
 
     exit(0)
