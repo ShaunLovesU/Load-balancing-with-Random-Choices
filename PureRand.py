@@ -1,6 +1,6 @@
-# RandMin.py
+# PureRand.py
 '''
-A queuing system wherein a job chooses the m server(less than total number) to dispacth mission.
+A queuing system wherein a job chooses a random server to dispacth mission.
 '''
 
 import simpy
@@ -31,23 +31,9 @@ class  QSYSTEM:
         arrive = environment.now
         print('%7.4f %s: Arrived' % (arrive, name))
         
-        # The load balancer randomly selects $d$ servers ($d < m$)
-        # The load balancer checks the queue length of the selected $d$ servers
-        # The load balancer dispatches the incoming customer to the server that has the shortest queue length.
-        num_selected_server = random.randint(1, self.servers_n-1)
-        balancer_lst = random.sample(range(len(servers)), num_selected_server)
-        
-        each_length = {}
-        for bi in balancer_lst:
-            each_length[bi] = len(servers[bi].put_queue) + len(servers[bi].users)           
-            
-        tmp = {}
-        for i in range(len(servers)):
-            tmp[i] = len(servers[i].put_queue)
-        self.queues.append(tmp)
-
-        sort_each_length = sorted(each_length.items(), key = lambda x : x[1])
-        choice = sort_each_length[0][0]
+        # The load balancer randomly selects one server from the $m$ servers and dispatches the incoming customer to the selected server.
+        balancer_lst = random.sample(range(len(servers)), 1)
+        choice = balancer_lst[0]
         print('dispich to :',choice)
         with servers[choice].request() as req:
             yield req
@@ -85,7 +71,7 @@ class  QSYSTEM:
 def main():
     # Parameters
     RSEED = 204204
-    SERVERS_N = 20  # Number of servers in the system
+    SERVERS_N = 5  # Number of servers in the system
     mean_arrtime = 7  # Exponential distribution mean
     mean_sertime = 90  # Exponential distribution mean
     customers_n = 300  # Total number of customers

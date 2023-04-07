@@ -9,6 +9,13 @@ import math
 import matplotlib.pyplot as plt
 import pandas as pd
 
+choice = 0
+# Parameters
+RSEED = 204204
+SERVERS_N = 5  # Number of servers in the system
+mean_arrtime = 7  # Exponential distribution mean
+mean_sertime = 90  # Exponential distribution mean
+customers_n = 300  # Total number of customers
 
 class  QSYSTEM:
     def __init__(self, rand_seed, servers_n, mean_arrtime, mean_sertime, customers_n):
@@ -28,28 +35,17 @@ class  QSYSTEM:
             
     def customer(self, environment, name, servers):
         """The customer arrives, dispatch customer to a shortest queue."""
+        global choice
         arrive = environment.now
         print('%7.4f %s: Arrived' % (arrive, name))
         
-        # The load balancer randomly selects $d$ servers ($d < m$)
-        # The load balancer checks the queue length of the selected $d$ servers
-        # The load balancer dispatches the incoming customer to the server that has the shortest queue length.
-        num_selected_server = random.randint(1, self.servers_n-1)
-        balancer_lst = random.sample(range(len(servers)), num_selected_server)
+        # The load balancer uses the round-robin method to dispatch incoming customers, i.e., the order of servers for dispatching customers is $1, 2, …, m, 1, 2, …, m, 1, 2, …$
         
-        each_length = {}
-        for bi in balancer_lst:
-            each_length[bi] = len(servers[bi].put_queue) + len(servers[bi].users)           
-            
-        tmp = {}
-        for i in range(len(servers)):
-            tmp[i] = len(servers[i].put_queue)
-        self.queues.append(tmp)
-
-        sort_each_length = sorted(each_length.items(), key = lambda x : x[1])
-        choice = sort_each_length[0][0]
+        if choice == len(servers):
+            choice = 0
         print('dispich to :',choice)
         with servers[choice].request() as req:
+            choice+=1
             yield req
             wait = environment.now - arrive
             print('%7.4f %s: Waited %6.3f, start service' % (environment.now, name, wait))
@@ -61,6 +57,7 @@ class  QSYSTEM:
             for i in range(len(servers)):
                 tmp[i] = len(servers[i].put_queue)
             self.queues.append(tmp)
+        
 
     def draw(self):
         df = pd.DataFrame(self.queues).plot()
@@ -83,12 +80,6 @@ class  QSYSTEM:
         return environment
 
 def main():
-    # Parameters
-    RSEED = 204204
-    SERVERS_N = 20  # Number of servers in the system
-    mean_arrtime = 7  # Exponential distribution mean
-    mean_sertime = 90  # Exponential distribution mean
-    customers_n = 300  # Total number of customers
     
     qs = QSYSTEM(RSEED, SERVERS_N, mean_arrtime, mean_sertime, customers_n)
     qs.creat_environment()
